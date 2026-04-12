@@ -1,0 +1,19 @@
+{
+  "name": "MedMinder AI",
+  "short_name": "MedMinder",
+  "description": "Medication adherence and safety support for elderly immigrants.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e3a8a",
+  "lang": "en",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon",
+      "purpose": "any"
+    }
+  ]
+}

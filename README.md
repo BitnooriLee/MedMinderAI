@@ -1,6 +1,6 @@
 # MedMinder AI
 
-Progressive Web App for **medication adherence** and **safety-oriented screening**, aimed at mobile-first, high-contrast UX. The product direction is documented in `PROJECTPLAN.md` and `.cursorrules` (accuracy-first, official FDA data for grounding, minimal PHI retention).
+Progressive Web App for **medication adherence** and **safety-oriented screening**, aimed at mobile-first, high-contrast UX. The product direction is documented in `PROJECTPLAN.md`(accuracy-first, official FDA data for grounding, minimal PHI retention).
 
 This README describes **what is implemented today** in the repository, not the full future roadmap.
 
