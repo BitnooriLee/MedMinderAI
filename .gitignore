@@ -74,3 +74,6 @@ supabase/.temp
 # OS
 .AppleDouble
 .LSOverride
+node_modules/
+.env
+.next/

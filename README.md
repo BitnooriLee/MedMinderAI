@@ -120,8 +120,8 @@ flowchart TB
 
 - **`/test-db`**: client-side Supabase session + `medications` list for manual RLS verification. **Blocked in production** by `src/middleware.ts` unless `ENABLE_TEST_DB=true`.
 - **`GET /api/health`**: minimal JSON for uptime checks.
-- **`POST /api/smoke/payload`**: multipart size/MIME probe when `SMOKE_TEST_SECRET` is set (Bearer auth).
-- **`scripts/prod-smoke.mjs`**: production smoke for manifest, service worker, health, openFDA, optional OpenAI, and payload route.
+- **`POST /api/smoke/payload`**: multipart size/MIME probe when `SMOKE_TEST_SECRET` is set (Bearer auth). App max image size is 6MiB (`MAX_PRESCRIPTION_IMAGE_BYTES`); **Vercel serverless request bodies are ~4.5MB**, so very large multipart probes can return **413** before this route runs.
+- **`scripts/prod-smoke.mjs`**: production smoke for manifest, service worker, health, openFDA, optional OpenAI, and `/api/smoke/payload`. Loads `.env` / `.env.local`; supports **Vercel Deployment Protection** via `VERCEL_AUTOMATION_BYPASS_SECRET` (header `x-vercel-protection-bypass`). On Vercel, payload checks use a **4MiB** in-route probe and treat **6MiB → 413 `FUNCTION_PAYLOAD_TOO_LARGE`** as expected platform behavior (see script header).
 
 ---
 
@@ -184,6 +184,7 @@ Copy [`.env.example`](./.env.example) to `.env.local`, set values locally, and k
 | `SMOKE_TEST_SECRET` | server | Enables `/api/smoke/payload` and auth for smoke script |
 | `ENABLE_TEST_DB` | server | Set `true` to allow `/test-db` outside development |
 | `NEXT_PUBLIC_BASE_URL` / `BASE_URL` | tooling | Used by `scripts/prod-smoke.mjs` |
+| `VERCEL_AUTOMATION_BYPASS_SECRET` | tooling | Optional; same value as Vercel → **Deployment Protection** → **Protection Bypass for Automation**. Local `npm run smoke:prod` sends `x-vercel-protection-bypass` so probes hit the app behind protection. Alias: `VERCEL_PROTECTION_BYPASS`. |
 
 `next.config.mjs` also maps `SUPABASE_URL` / `SUPABASE_ANON_KEY` to `NEXT_PUBLIC_*` for build-time injection when needed.
 
@@ -229,13 +230,25 @@ Optional seed: `supabase/scripts/smoke_validation_seed.sql` (see script header f
 
 ## Operations and smoke testing
 
-From project root (production URL, secrets as appropriate):
+From project root, with `NEXT_PUBLIC_BASE_URL` or `BASE_URL` and optional secrets in `.env` / `.env.local` (the script loads them like Next.js):
 
 ```bash
+npm run smoke:prod
+# equivalent:
 NEXT_PUBLIC_BASE_URL=https://your-deployment.example SMOKE_TEST_SECRET=... node scripts/prod-smoke.mjs
 ```
 
-The script checks PWA assets, `/api/health`, openFDA reachability, optional OpenAI key presence, and multipart behavior against `/api/smoke/payload`.
+**What it checks**
+
+- **PWA**: `manifest.json`, `sw.js` (production build artifacts).
+- **App**: `GET /api/health`.
+- **Upstream**: openFDA `drug/label.json` (no spend); optional OpenAI `GET /v1/models` if `OPENAI_API_KEY` is set.
+- **Multipart**: `POST /api/smoke/payload` with Bearer `SMOKE_TEST_SECRET` (must match the value on the deployment).
+
+**Vercel-specific**
+
+- **Deployment Protection** (password / Vercel Authentication): set `VERCEL_AUTOMATION_BYPASS_SECRET` locally to the dashboard secret so requests are not **401**. First log line reports whether the bypass header is configured.
+- **Request body cap**: Vercel serverless functions enforce roughly **4.5MB** per request (`FUNCTION_PAYLOAD_TOO_LARGE` / **413**). The app still documents a **6MiB** prescription image cap for logic aligned with `next.config.mjs` `serverActions.bodySizeLimit`, but payloads larger than the platform cap never reach your route. The smoke script expects a **4MiB** probe to succeed in-route; a **6MiB** probe may **413** on Vercel (treated as OK with a skip for the in-route “over max” case). For real large uploads, prefer **client → object storage** (e.g. Supabase) rather than sending multi‑MiB bodies through the serverless function.
 
 ---
 
