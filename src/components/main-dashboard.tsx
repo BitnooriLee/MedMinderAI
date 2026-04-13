@@ -9,22 +9,10 @@ import { AnalyzingProgress } from "@/components/AnalyzingProgress";
 import { PushNotificationBanner } from "@/components/dashboard/PushNotificationBanner";
 import { TodayScheduleSection } from "@/components/dashboard/TodayScheduleSection";
 import { CorrectionForm } from "@/components/CorrectionForm";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { VerificationModal } from "@/components/VerificationModal";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import type { AnalyzePrescriptionResult } from "@/lib/prescription/types";
-
-const languages = [
-  { code: "en" as const, labelKey: "lang_en" as const },
-  { code: "ko" as const, labelKey: "lang_ko" as const },
-  { code: "es" as const, labelKey: "lang_es" as const },
-];
 
 export function MainDashboard() {
   const { t, i18n } = useTranslation("common");
@@ -185,9 +173,12 @@ export function MainDashboard() {
       ) : null}
 
       <header className="flex flex-col gap-3">
-        <p className="text-sm font-semibold uppercase tracking-wide text-primary">
-          {t("appTitle")}
-        </p>
+        <div className="flex min-h-12 items-center justify-between gap-3">
+          <p className="min-w-0 flex-1 truncate text-sm font-semibold uppercase leading-none tracking-wide text-primary">
+            {t("appTitle")}
+          </p>
+          <LanguageSwitcher />
+        </div>
         <h1 className="text-2xl font-bold leading-tight text-foreground">
           {t("tagline")}
         </h1>
@@ -220,33 +211,6 @@ export function MainDashboard() {
           {t("scan_prescription_cta")}
         </Button>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("appTitle")}</CardTitle>
-          <CardDescription>{t("accessibility_note")}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div
-            className="flex flex-wrap gap-3"
-            role="group"
-            aria-label={t("scan_language_group")}
-          >
-            {languages.map(({ code, labelKey }) => (
-              <Button
-                key={code}
-                type="button"
-                variant={i18n.language.startsWith(code) ? "default" : "outline"}
-                size="default"
-                className="min-h-12 shrink-0 text-lg"
-                onClick={() => void i18n.changeLanguage(code)}
-              >
-                {t(labelKey)}
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
       <PushNotificationBanner />
     </div>

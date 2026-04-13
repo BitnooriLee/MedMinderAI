@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   Card,
   CardContent,
@@ -12,12 +12,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-
-const languages = [
-  { code: "en" as const, labelKey: "lang_en" as const },
-  { code: "ko" as const, labelKey: "lang_ko" as const },
-  { code: "es" as const, labelKey: "lang_es" as const },
-];
 
 type MedicationRow = {
   id: string;
@@ -110,43 +104,17 @@ export default function TestDbPage() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col gap-6 px-4 py-8 pb-28">
       <header className="flex flex-col gap-2">
-        <p className="text-lg font-semibold text-primary">{t("appTitle")}</p>
+        <div className="flex min-h-12 items-center justify-between gap-3">
+          <p className="min-w-0 flex-1 truncate text-sm font-semibold uppercase leading-none tracking-wide text-primary">
+            {t("appTitle")}
+          </p>
+          <LanguageSwitcher />
+        </div>
         <h1 className="text-2xl font-bold leading-tight text-foreground">
           {t("testDb_title")}
         </h1>
         <p className="text-lg text-muted-foreground">{t("testDb_description")}</p>
       </header>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">{t("testDb_langHeading")}</CardTitle>
-          <CardDescription className="text-lg">
-            {t("accessibility_note")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div
-            className="flex flex-wrap gap-3"
-            role="group"
-            aria-label="Language"
-          >
-            {languages.map(({ code, labelKey }) => (
-              <Button
-                key={code}
-                type="button"
-                variant={
-                  i18n.language.startsWith(code) ? "default" : "outline"
-                }
-                size="default"
-                className="min-h-12 shrink-0 text-lg"
-                onClick={() => void i18n.changeLanguage(code)}
-              >
-                {t(labelKey)}
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>
