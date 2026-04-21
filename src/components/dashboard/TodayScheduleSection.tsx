@@ -50,6 +50,13 @@ export function TodayScheduleSection() {
   const [ddiFindings, setDdiFindings] = useState<DdiFinding[]>([]);
   const [ddiModalOpen, setDdiModalOpen] = useState(false);
 
+  const normalizeProviderError = useCallback((raw: string | null): string | null => {
+    if (!raw) return null;
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+    return trimmed.replace(/\s+/g, " ");
+  }, []);
+
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -122,19 +129,42 @@ export function TodayScheduleSection() {
     if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
     const authError = url.searchParams.get("authError");
-    if (!authError) return;
-    const key =
-      authError === "oauth_exchange_failed"
-        ? "auth_callback_oauth_exchange_failed"
-        : authError === "magic_link_failed"
-          ? "auth_callback_magic_link_failed"
-          : "auth_callback_invalid";
-    setSignInError(t(key));
+    const providerError = normalizeProviderError(url.searchParams.get("error"));
+    const providerErrorCode = normalizeProviderError(url.searchParams.get("error_code"));
+    const providerErrorDescription = normalizeProviderError(
+      url.searchParams.get("error_description")
+    );
+    if (!authError && !providerError && !providerErrorCode && !providerErrorDescription) {
+      return;
+    }
+
+    if (providerError || providerErrorCode || providerErrorDescription) {
+      const providerDetails = [
+        providerError ? `error=${providerError}` : null,
+        providerErrorCode ? `code=${providerErrorCode}` : null,
+        providerErrorDescription ? `detail=${providerErrorDescription}` : null,
+      ]
+        .filter(Boolean)
+        .join(" | ");
+      setSignInError(`${t("auth_sign_in_error")} (${providerDetails})`);
+    } else if (authError) {
+      const key =
+        authError === "oauth_exchange_failed"
+          ? "auth_callback_oauth_exchange_failed"
+          : authError === "magic_link_failed"
+            ? "auth_callback_magic_link_failed"
+            : "auth_callback_invalid";
+      setSignInError(t(key));
+    }
+
     url.searchParams.delete("authError");
+    url.searchParams.delete("error");
+    url.searchParams.delete("error_code");
+    url.searchParams.delete("error_description");
     const nextSearch = url.searchParams.toString();
     const nextUrl = `${url.pathname}${nextSearch ? `?${nextSearch}` : ""}${url.hash}`;
     window.history.replaceState({}, "", nextUrl);
-  }, [t]);
+  }, [normalizeProviderError, t]);
 
   const onMarkTaken = useCallback(
     async (logId: string) => {
@@ -151,12 +181,25 @@ export function TodayScheduleSection() {
   );
 
   const resolveRedirectBase = useCallback(() => {
+    if (typeof window !== "undefined") {
+      const browserOrigin = window.location.origin.replace(/\/$/, "");
+      const configured = process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL?.trim();
+      if (!configured) {
+        return browserOrigin;
+      }
+      const normalizedConfigured = configured.replace(/\/$/, "");
+      // Keep local development bound to the exact origin currently opened in the browser.
+      if (
+        /localhost|127\.0\.0\.1/.test(browserOrigin) &&
+        normalizedConfigured !== browserOrigin
+      ) {
+        return browserOrigin;
+      }
+      return normalizedConfigured;
+    }
     const configured = process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL?.trim();
     if (configured) {
       return configured.replace(/\/$/, "");
-    }
-    if (typeof window !== "undefined") {
-      return window.location.origin.replace(/\/$/, "");
     }
     return "";
   }, []);
