@@ -34,7 +34,7 @@ export function NextDoseHero({ items, timeZone, onMarkTaken, busyId }: Props) {
     return (
       <section
         aria-label={t("schedule_hero_section")}
-        className="rounded-3xl border-2 border-dashed border-muted-foreground/40 bg-muted/30 p-6 text-center text-[20px] font-semibold text-muted-foreground"
+        className="rounded-3xl border-2 border-dashed border-muted-foreground/40 bg-muted/30 p-6 text-center text-[20px] font-semibold text-muted-foreground whitespace-pre-line"
       >
         {t("schedule_hero_empty")}
       </section>
@@ -104,7 +104,7 @@ export function NextDoseHero({ items, timeZone, onMarkTaken, busyId }: Props) {
     >
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-lg font-bold uppercase tracking-wide text-primary">
+          <p className="text-center whitespace-pre-line text-lg font-bold uppercase tracking-wide text-primary">
             {t("schedule_hero_next_label")}
           </p>
           <p className="truncate text-[32px] font-extrabold leading-tight tracking-tight text-foreground">
